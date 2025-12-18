@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kerala Backwater Bliss | TravelEase</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      color: #333;
+    }
+
+    header {
+      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.4)), url("lib/img/Services/tour4.jpg");
+      background-size: cover;
+      background-position: center;
+      color: white;
+      text-align: center;
+      padding: 120px 20px;
+    }
+
+    header h1 {
+      font-size: 3rem;
+      margin: 0;
+    }
+
+    header p {
+      font-size: 1.2rem;
+    }
+
+    /* --- Top Section --- */
+    .top-section {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      gap: 40px;
+      flex-wrap: wrap;
+      padding: 40px;
+    }
+
+    .carousel, .package-details {
+      flex: 1;
+      max-width: 600px;
+      height: 410px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .carousel:hover, .package-details:hover {
+      transform: scale(1.03);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .carousel img {
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      object-fit: cover;
+    }
+
+    .package-details {
+      background: white;
+      overflow-y: auto;
+    }
+
+    h2 { color: #0077b6; margin-top: 30px; }
+    ul { line-height: 1.8; padding-left: 20px; }
+
+    /* --- Bottom Section --- */
+    .bottom-section {
+      text-align: center;
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 600px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    input[type="number"] {
+      width: 80px;
+      padding: 5px;
+      margin: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      text-align: center;
+    }
+
+    .btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 12px 24px;
+      background: linear-gradient(45deg, #0078ff, #00c6ff);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: linear-gradient(45deg, #005fcc, #00a8e8);
+      transform: scale(1.05);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+    }
+
+    .modal-content {
+      background: #fff;
+      margin: 10% auto;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .close {
+      float: right;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 900px) {
+      .top-section {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .carousel, .package-details {
+        height: auto;
+        max-width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <h1>Kerala Backwater Bliss</h1>
+    <p>Experience serene backwaters, lush tea gardens, and tropical tranquility.</p>
+  </header>
+
+  <!-- IMAGE + ITINERARY -->
+  <div class="top-section">
+    <div class="carousel">
+      <img src="lib/img/Services/kerala.jpg" alt="Kerala Backwaters">
+    </div>
+
+    <div class="package-details">
+      <h2>Itinerary</h2>
+      <ul>
+        <li><strong>Day 1:</strong> Arrival at Kochi, transfer to Munnar – visit waterfalls en route.</li>
+        <li><strong>Day 2:</strong> Explore Munnar tea plantations and Eravikulam National Park.</li>
+        <li><strong>Day 3:</strong> Travel to Alleppey – enjoy a houseboat cruise with meals.</li>
+        <li><strong>Day 4:</strong> Departure after breakfast.</li>
+      </ul>
+
+      <h2>Inclusions</h2>
+      <ul>
+        <li>3 Nights accommodation (Munnar + Alleppey)</li>
+        <li>Daily breakfast and 1 houseboat stay</li>
+        <li>Private cab transfers</li>
+        <li>Local sightseeing</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- FARE CALCULATOR -->
+  <div class="bottom-section">
+    <h2>Estimate Your Trip Cost</h2>
+    <p>Base price per person: <strong>₹10,499</strong></p>
+    <input type="number" id="travelerCount" placeholder="No. of travelers" min="1"><br>
+    <button class="btn" onclick="calculateCost()">Calculate</button>
+    <p id="totalCost"></p>
+
+    <button class="btn" id="bookNowBtn">Book Now</button>
+  </div>
+
+  <!-- BOOKING MODAL -->
+  <div id="bookingModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2>Book Your Kerala Trip</h2>
+      <p>Enter your details to confirm your booking.</p>
+      <form onsubmit="submitBooking(event)">
+        <input type="text" id="name" placeholder="Full Name" required><br><br>
+        <input type="email" id="email" placeholder="Email" required><br><br>
+        <button type="submit" class="btn">Confirm Booking</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function calculateCost() {
+      const count = document.getElementById("travelerCount").value;
+      if (count > 0) {
+        const total = count * 10499;
+        document.getElementById("totalCost").innerHTML = `Estimated Total: <strong>₹${total.toLocaleString()}</strong>`;
+      } else {
+        document.getElementById("totalCost").innerText = "Please enter a valid number of travelers.";
+      }
+    }
+
+    const modal = document.getElementById("bookingModal");
+    const btn = document.getElementById("bookNowBtn");
+    btn.onclick = () => modal.style.display = "block";
+    function closeModal() { modal.style.display = "none"; }
+
+async function submitBooking(event) {
+  event.preventDefault();
+
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const travelers = parseInt(document.getElementById("travelerCount").value) || 1;
+  const packageName = "Kerala Backwater Bliss";
+  const basePrice = 10499;
+  const totalPrice = travelers * basePrice;
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Please sign in before booking.");
+    window.location.href = "auth.html";
+    return;
+  }
+
+  // ✅ ADD THIS CODE (this is the fetch request)
+const res = await fetch("http://localhost:5000/api/bookings", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer " + localStorage.getItem("token")
+  },
+  body: JSON.stringify({
+    packageName,
+    travelers,
+    totalPrice
+  })
+});
+
+  const data = await res.json();
+
+  if (res.ok) {
+    alert(`Booking confirmed! Booking ID: ${data.bookingId}`);
+    closeModal();
+  } else {
+    alert(data.message || "Booking failed");
+  }
+}
+
+    
+
+    window.onclick = e => { if (e.target == modal) closeModal(); };
+  </script>
+</body>
+</html>
