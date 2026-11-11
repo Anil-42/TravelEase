@@ -14,7 +14,6 @@
 
 ## Table of Contents
 
-- [Repository Evolution: Modern App vs. Preserved Legacy Assets](#repository-evolution-modern-app-vs-preserved-legacy-assets)
 - [Features](#features)
   - [Customer Experience](#customer-experience)
   - [Administrative Features](#administrative-features)
@@ -31,19 +30,6 @@
 - [Testing & Quality Assurance](#testing--quality-assurance)
 - [Future Enhancements](#future-enhancements)
 - [Author & License](#author--license)
-
----
-
-## Repository Evolution: Modern App vs. Preserved Legacy Assets
-
-This repository documents the complete evolutionary journey of the TravelEase project:
-
-- **Root Directory Files (`*.html`, `styles.css`, `server.js`, `script.js`, legacy images)**:  
-  These represent the initial static HTML/CSS/JavaScript prototype and mock Node.js server created during earlier project milestones. They are intentionally preserved in the repository root for historical reference.
-- **Active Modern Full-Stack Platform**:
-  - [`backend/`](backend/): The authoritative modern Spring Boot 3 REST API built with Java 17/21, Spring Security 6, JWT authentication, and Flyway database migrations.
-  - [`frontend/`](frontend/): The active modern single-page web client built with React 18, Vite, React Router v6, and Axios.
-  - [`database/`](database/): Consolidated reference schemas and migration documentation.
 
 ---
 
@@ -193,7 +179,6 @@ TRAVELEASE/
 │   ├── README.md                        # Phase 1 verification & schema notes
 │   └── schema.sql                       # Full consolidated reference schema
 │
-├── auth.html, server.js, styles.css...  # Preserved legacy prototype files (for historical reference)
 ├── .gitignore                           # Root Git ignore rules (Maven, Node, Secrets)
 ├── LICENSE                              # MIT License
 └── README.md                            # Primary project documentation
@@ -261,11 +246,18 @@ Spring Boot loads its configuration from **system or shell environment variables
    $env:DB_NAME = "travelease_flyway"
    $env:DB_USERNAME = "root"
    $env:DB_PASSWORD = "your_mysql_password_here"
+   # Generate a unique 256-bit (32-byte) secret key for JWT signing:
    $env:JWT_SECRET = "your_secure_random_jwt_secret_key_at_least_32_bytes_long"
    $env:TRAVELEASE_ADMIN_USERNAME = "admin"
    $env:TRAVELEASE_ADMIN_EMAIL = "admin@travelease.com"
    $env:TRAVELEASE_ADMIN_PASSWORD = "your_secure_admin_password_here"
    ```
+
+   > [!IMPORTANT]
+   > **Security Notice**: Never commit real database passwords, admin credentials, or JWT signing keys to version control. The `$env:JWT_SECRET` value must be a cryptographically secure random string (minimum 256 bits / 32 bytes). You can generate a random secret in PowerShell with:
+   > ```powershell
+   > $bytes = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes); [Convert]::ToBase64String($bytes)
+   > ```
 
 3. Build and launch the Spring Boot backend:
    ```powershell
@@ -324,8 +316,10 @@ All API endpoints are prefixed with `/api`.
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/packages` | Public | List all active curated packages |
 | `GET` | `/api/packages/{id}` | Public | Retrieve package details, full itinerary, and pricing |
+| `GET` | `/api/packages/admin/all` | Admin | List all packages including unavailable/archived |
 | `POST` | `/api/packages` | Admin | Create a new tour package |
 | `PUT` | `/api/packages/{id}` | Admin | Update package information and itinerary |
+| `PATCH`| `/api/packages/{id}/availability` | Admin | Toggle package booking availability |
 | `DELETE`| `/api/packages/{id}` | Admin | Delete or archive a tour package |
 
 ### 3. Bookings (`/api/bookings`)
@@ -334,20 +328,15 @@ All API endpoints are prefixed with `/api`.
 | `POST` | `/api/bookings` | Authenticated | Submit reservation request (calculates total fare server-side) |
 | `GET` | `/api/bookings/my` | Authenticated | List all bookings belonging to the authenticated customer |
 | `GET` | `/api/bookings/{id}` | Authenticated | Retrieve booking voucher by ID (enforces user isolation) |
-| `POST` | `/api/bookings/{id}/cancel` | Authenticated | Cancel an eligible pending booking |
+| `PATCH`| `/api/bookings/{id}/cancel` | Authenticated | Cancel an eligible pending booking |
+| `GET` | `/api/bookings` | Admin | Retrieve all customer reservations across the platform |
+| `PATCH`| `/api/bookings/{id}/status` | Admin | Update booking status (`CONFIRMED`, `COMPLETED`, `CANCELLED`) |
 
-### 4. Admin Booking Management (`/api/admin/bookings`)
-| Method | Endpoint | Access | Purpose |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/admin/bookings` | Admin | Retrieve all customer reservations across the platform |
-| `PUT` | `/api/admin/bookings/{id}/status` | Admin | Update booking status (`CONFIRMED`, `COMPLETED`, `CANCELLED`) |
-
-### 5. Customer Inquiries (`/api/contact`)
+### 4. Customer Inquiries (`/api/contact`)
 | Method | Endpoint | Access | Purpose |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/contact` | Public | Submit customer inquiry or customized trip request |
 | `GET` | `/api/contact` | Admin | Review submitted contact inquiries |
-| `PUT` | `/api/contact/{id}/status` | Admin | Update inquiry status (`IN_REVIEW`, `RESOLVED`, `CLOSED`) |
 
 ---
 
