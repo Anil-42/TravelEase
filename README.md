@@ -1,4 +1,4 @@
-# TravelEase — Modern Travel Package & Tour Reservation Platform
+# TravelEase — Travel Package & Tour Reservation Platform
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.4-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18.x-61dafb.svg)](https://react.dev/)
@@ -8,12 +8,13 @@
 [![Java](https://img.shields.io/badge/Java-17%20%7C%2021-ED8B00.svg)](https://www.oracle.com/java/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**TravelEase** is a production-grade full-stack web application designed for browsing, reserving, and managing curated travel holiday packages across India. Built with a responsive **React (Vite)** single-page application, a robust **Spring Boot 3** REST backend with **Spring Security** and **JWT authentication**, and a **MySQL 8** database versioned using **Flyway migrations**.
+**TravelEase** is a full-stack web application designed for browsing, reserving, and managing curated holiday travel packages across India. Built with a responsive **React (Vite)** single-page application, a structured **Spring Boot 3** REST backend with **Spring Security** and **JWT authentication**, and a **MySQL 8** database versioned using **Flyway migrations**.
 
 ---
 
 ## Table of Contents
 
+- [Repository Evolution: Modern App vs. Preserved Legacy Assets](#repository-evolution-modern-app-vs-preserved-legacy-assets)
 - [Features](#features)
   - [Customer Experience](#customer-experience)
   - [Administrative Features](#administrative-features)
@@ -33,20 +34,33 @@
 
 ---
 
+## Repository Evolution: Modern App vs. Preserved Legacy Assets
+
+This repository documents the complete evolutionary journey of the TravelEase project:
+
+- **Root Directory Files (`*.html`, `styles.css`, `server.js`, `script.js`, legacy images)**:  
+  These represent the initial static HTML/CSS/JavaScript prototype and mock Node.js server created during earlier project milestones. They are intentionally preserved in the repository root for historical reference.
+- **Active Modern Full-Stack Platform**:
+  - [`backend/`](backend/): The authoritative modern Spring Boot 3 REST API built with Java 17/21, Spring Security 6, JWT authentication, and Flyway database migrations.
+  - [`frontend/`](frontend/): The active modern single-page web client built with React 18, Vite, React Router v6, and Axios.
+  - [`database/`](database/): Consolidated reference schemas and migration documentation.
+
+---
+
 ## Features
 
 ### Customer Experience
-- **Interactive Tour Catalog**: Browse handcrafted itineraries (Goa Beach Escape, Manali Mountain Getaway, Jaipur Royal Heritage, and Kerala Backwater Bliss) with comprehensive itineraries, high-definition imagery, inclusions, and exclusions.
-- **Server-Verified Booking Engine**: Reserve tour dates and guest counts with strict server-side rate calculation preventing client tampering.
-- **Reservation Workflow**: Bookings are immediately created in `PENDING` state with `PENDING` payment status, ready for review and confirmation by travel coordinators.
+- **Interactive Tour Catalog**: Browse handcrafted itineraries (Goa Beach Escape, Manali Mountain Getaway, Jaipur Royal Heritage, and Kerala Backwater Bliss) with comprehensive itineraries, photography, inclusions, and exclusions.
+- **Server-Verified Booking Engine**: Reserve tour dates and guest counts with strict server-side rate calculation (`basePrice * travelers`) preventing client tampering.
+- **Reservation Workflow**: Bookings are immediately created in `PENDING` status with `PENDING` payment status, ready for review and confirmation by travel coordinators.
 - **My Bookings Dashboard**: Review active and historical reservations, track status updates, and view fare breakdowns.
 - **Self-Service Cancellation**: Cancel pending bookings with instant status reflection (`CANCELLED`) and database constraint integrity.
-- **Customer Inquiry Portal**: Submit tailored travel inquiries and general questions directly to the concierge team.
+- **Customer Inquiry Portal**: Submit tailored travel inquiries and general questions directly to the concierge desk.
 - **Secure Authentication**: Customer registration, login, and secure self-service password reset workflow with time-limited tokens.
 
 ### Administrative Features
 - **Role-Based Authorization (`ROLE_ADMIN`)**: Secured management endpoints accessible exclusively to authenticated administrators.
-- **Package Management**: Create, update, toggle availability, and archive tour packages and itineraries.
+- **Package Management**: Create, update, toggle availability, and archive tour packages and itineraries via REST endpoints.
 - **Reservation Management**: Oversee all user reservations, view traveler contacts, and update booking statuses (`CONFIRMED`, `COMPLETED`, `CANCELLED`).
 - **Inquiry Desk**: Review incoming customer inquiries and update resolution status (`RESOLVED`, `CLOSED`).
 
@@ -117,7 +131,7 @@ flowchart TD
             ContactRepo["ContactInquiryRepository"]
         end
 
-        AxiosClient -- "HTTPS / JSON + JWT" --> SecurityFilter
+        AxiosClient -- "HTTP / JSON + JWT" --> SecurityFilter
         SecurityFilter --> JwtFilter
         JwtFilter --> Controllers
         Controllers --> Services
@@ -154,7 +168,7 @@ TRAVELEASE/
 │   │   │       ├── db/migration/        # Authoritative Flyway SQL migrations (V1–V7)
 │   │   │       └── application.yml      # Externalized Spring Boot configuration
 │   │   └── test/                        # Integration and unit tests (JUnit 5, Mockito)
-│   ├── .env.example                     # Backend environment variable template
+│   ├── .env.example                     # Backend environment variable reference template
 │   ├── mvnw                             # Linux/macOS Maven wrapper
 │   ├── mvnw.cmd                         # Windows Maven wrapper
 │   └── pom.xml                          # Maven build dependencies & plugins
@@ -170,7 +184,7 @@ TRAVELEASE/
 │   │   ├── styles/                      # Main design system & custom CSS stylesheets
 │   │   ├── App.jsx                      # Route definitions & application layout
 │   │   └── main.jsx                     # React entrypoint
-│   ├── .env.example                     # Frontend environment variable template
+│   ├── .env.example                     # Frontend environment variable reference template
 │   ├── index.html                       # HTML5 entrypoint
 │   ├── package.json                     # Node.js dependencies & build scripts
 │   └── vite.config.js                   # Vite bundler configuration
@@ -179,7 +193,9 @@ TRAVELEASE/
 │   ├── README.md                        # Phase 1 verification & schema notes
 │   └── schema.sql                       # Full consolidated reference schema
 │
+├── auth.html, server.js, styles.css...  # Preserved legacy prototype files (for historical reference)
 ├── .gitignore                           # Root Git ignore rules (Maven, Node, Secrets)
+├── LICENSE                              # MIT License
 └── README.md                            # Primary project documentation
 ```
 
@@ -191,7 +207,7 @@ TravelEase uses **Flyway** to automatically migrate and version the database sch
 
 ### 1. Create the Database in MySQL
 
-Open MySQL Workbench or your terminal shell:
+Open MySQL Workbench or your command-line client:
 
 ```sql
 CREATE DATABASE travelease_flyway 
@@ -199,11 +215,11 @@ CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 ```
 
-> **Note**: The legacy database `travelease` is kept untouched as an isolated reference. All active development and production workloads execute against `travelease_flyway`.
+> **Note**: The legacy database `travelease` is kept untouched as an isolated reference. All active development and testing execute against `travelease_flyway`.
 
 ### 2. Migration Manifest
 
-Flyway automatically applies versioned migrations in [`backend/src/main/resources/db/migration/`](backend/src/main/resources/db/migration/):
+Flyway automatically applies versioned migrations from [`backend/src/main/resources/db/migration/`](backend/src/main/resources/db/migration/):
 
 | Version | Description | Target Objects |
 | :--- | :--- | :--- |
@@ -231,30 +247,27 @@ Ensure the following tools are installed on your machine:
 
 ### Backend Setup (Windows)
 
-1. Open a new PowerShell terminal and navigate to the backend directory:
+Spring Boot loads its configuration from **system or shell environment variables**. The `backend/.env.example` file is an illustrative reference of available keys.
+
+1. Open a PowerShell terminal and navigate to the backend directory:
    ```powershell
    cd D:\other\TravelEase\backend
    ```
 
-2. Copy the environment template:
-   ```powershell
-   Copy-Item .env.example .env
-   ```
-
-3. Configure your terminal environment variables:
+2. Set the required environment variables in your terminal session (replace placeholder values with your real local configuration):
    ```powershell
    $env:DB_HOST = "localhost"
    $env:DB_PORT = "3306"
    $env:DB_NAME = "travelease_flyway"
    $env:DB_USERNAME = "root"
-   $env:DB_PASSWORD = "your_mysql_password"
-   $env:JWT_SECRET = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970"
+   $env:DB_PASSWORD = "your_mysql_password_here"
+   $env:JWT_SECRET = "your_secure_random_jwt_secret_key_at_least_32_bytes_long"
    $env:TRAVELEASE_ADMIN_USERNAME = "admin"
    $env:TRAVELEASE_ADMIN_EMAIL = "admin@travelease.com"
-   $env:TRAVELEASE_ADMIN_PASSWORD = "your_secure_admin_password"
+   $env:TRAVELEASE_ADMIN_PASSWORD = "your_secure_admin_password_here"
    ```
 
-4. Build and run the Spring Boot backend:
+3. Build and launch the Spring Boot backend:
    ```powershell
    .\mvnw.cmd clean install
    .\mvnw.cmd spring-boot:run
@@ -266,17 +279,19 @@ Ensure the following tools are installed on your machine:
 
 ### Frontend Setup (Windows)
 
+Vite supports local `.env` files for browser environment variables.
+
 1. Open a separate PowerShell terminal and navigate to the frontend directory:
    ```powershell
    cd D:\other\TravelEase\frontend
    ```
 
-2. Copy the environment template:
+2. Create your local `.env` file from the example template:
    ```powershell
    Copy-Item .env.example .env
    ```
 
-3. Install project dependencies:
+3. Install frontend dependencies:
    ```powershell
    npm install
    ```

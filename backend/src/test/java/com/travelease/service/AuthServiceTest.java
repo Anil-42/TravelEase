@@ -51,6 +51,7 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         jwtService = new JwtService();
+        jwtService.setSecretKey("mock-jwt-secret-key-for-unit-testing-purposes-only-32-bytes-minimum");
         authService = new AuthService(userRepository, passwordResetTokenRepository, passwordEncoder, jwtService, emailService);
 
         activeUser = new User("anil_traveler", "anil@example.com", "encodedPassword", Role.ROLE_USER);

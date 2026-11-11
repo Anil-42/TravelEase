@@ -25,7 +25,7 @@ All sensitive values are externalized and injected via environment variables:
 | `DB_NAME` | Active modernized database | `travelease_flyway` |
 | `DB_USERNAME` | MySQL user | `root` |
 | `DB_PASSWORD` | MySQL password | (Configured securely) |
-| `JWT_SECRET` | 256-bit secret key for JWT signing | (Secure 256-bit hex default for dev) |
+| `JWT_SECRET` | 256-bit secret key for JWT signing | (Injected via environment variable) |
 | `JWT_EXPIRATION_MS` | Token expiration time in ms | `86400000` (24 hours) |
 | `CORS_ALLOWED_ORIGINS` | Permitted frontend origins | `http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173` |
 | `TRAVELEASE_ADMIN_USERNAME` | Bootstrapped admin username | (Optional runtime bootstrap) |

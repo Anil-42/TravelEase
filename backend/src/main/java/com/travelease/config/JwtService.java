@@ -18,8 +18,8 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    @Value("${travelease.jwt.secret:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
-    private String secretKey = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+    @Value("${travelease.jwt.secret:}")
+    private String secretKey;
 
     @Value("${travelease.jwt.expiration-ms:86400000}")
     private long jwtExpiration = 86400000L;
@@ -99,6 +99,9 @@ public class JwtService {
     }
 
     private SecretKey getSignInKey() {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException("JWT signing secret is not configured. Please set the JWT_SECRET environment variable.");
+        }
         byte[] keyBytes;
         try {
             keyBytes = Decoders.BASE64.decode(secretKey);
