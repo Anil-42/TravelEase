@@ -8,17 +8,23 @@ public class UserResponse {
     private String email;
     private String role;
     private boolean active;
+    private boolean mustChangePassword;
     private LocalDateTime createdAt;
 
     public UserResponse() {
     }
 
     public UserResponse(Long id, String username, String email, String role, boolean active, LocalDateTime createdAt) {
+        this(id, username, email, role, active, false, createdAt);
+    }
+
+    public UserResponse(Long id, String username, String email, String role, boolean active, boolean mustChangePassword, LocalDateTime createdAt) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.role = role;
         this.active = active;
+        this.mustChangePassword = mustChangePassword;
         this.createdAt = createdAt;
     }
 
@@ -60,6 +66,14 @@ public class UserResponse {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    public void setMustChangePassword(boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
     }
 
     public LocalDateTime getCreatedAt() {

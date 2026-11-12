@@ -1,6 +1,7 @@
 package com.travelease.service;
 
 import com.travelease.config.JwtService;
+import com.travelease.config.PasswordPolicyValidator;
 import com.travelease.dto.request.ChangePasswordRequest;
 import com.travelease.dto.request.ForgotPasswordRequest;
 import com.travelease.dto.request.LoginRequest;
@@ -18,6 +19,7 @@ import com.travelease.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -56,8 +58,15 @@ public class AuthService {
     }
 
     @Transactional
+    @CacheEvict(value = "admin_dashboard_stats", allEntries = true)
     public AuthResponse register(RegisterRequest request) {
         String normalizedEmail = request.getEmail().trim().toLowerCase();
+
+        if (request.getConfirmPassword() == null || !request.getPassword().equals(request.getConfirmPassword())) {
+            throw new BadRequestException("Password and confirm password do not match.");
+        }
+
+        PasswordPolicyValidator.validate(request.getPassword());
 
         if (userRepository.existsByEmail(normalizedEmail)) {
             throw new BadRequestException("Email is already registered. Please log in.");
@@ -71,6 +80,7 @@ public class AuthService {
                 Role.ROLE_USER
         );
         user.setActive(true);
+        user.setMustChangePassword(false);
 
         User savedUser = userRepository.save(user);
         String token = jwtService.generateToken(savedUser);
@@ -80,7 +90,8 @@ public class AuthService {
                 savedUser.getId(),
                 savedUser.getDisplayName(),
                 savedUser.getEmail(),
-                savedUser.getRole().name()
+                savedUser.getRole().name(),
+                savedUser.isMustChangePassword()
         );
     }
 
@@ -106,7 +117,8 @@ public class AuthService {
                 user.getId(),
                 user.getDisplayName(),
                 user.getEmail(),
-                user.getRole().name()
+                user.getRole().name(),
+                user.isMustChangePassword()
         );
     }
 
@@ -115,6 +127,8 @@ public class AuthService {
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             throw new BadRequestException("New password and confirm password do not match");
         }
+
+        PasswordPolicyValidator.validate(request.getNewPassword());
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), currentUser.getPassword())) {
             throw new BadRequestException("Current password is incorrect");
@@ -125,6 +139,7 @@ public class AuthService {
         }
 
         currentUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        currentUser.setMustChangePassword(false);
         currentUser.setPasswordChangedAt(LocalDateTime.now());
         userRepository.save(currentUser);
 
@@ -143,7 +158,7 @@ public class AuthService {
 
         userRepository.findByEmail(normalizedEmail).ifPresent(user -> {
             if (!user.isActive()) {
-                log.info("Password reset requested for deactivated account: {}", user.getEmail());
+                log.info("Password reset requested for deactivated account user id: {}", user.getId());
                 return;
             }
 
@@ -172,6 +187,8 @@ public class AuthService {
             throw new BadRequestException("New password and confirm password do not match");
         }
 
+        PasswordPolicyValidator.validate(request.getNewPassword());
+
         String rawToken = request.getToken().trim();
         String tokenHash = hashToken(rawToken);
 
@@ -181,6 +198,7 @@ public class AuthService {
 
         User user = resetToken.getUser();
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setMustChangePassword(false);
         user.setPasswordChangedAt(LocalDateTime.now());
         userRepository.save(user);
 

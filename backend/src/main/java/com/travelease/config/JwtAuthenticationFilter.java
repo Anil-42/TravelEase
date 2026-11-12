@@ -58,7 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         long tokenIssuedAtSeconds = issuedAt != null ? (issuedAt.getTime() / 1000L) : 0L;
 
                         if (tokenIssuedAtSeconds < changedAtSeconds) {
-                            logger.debug("Rejected JWT token issued prior to password change for: " + userEmail);
+                            logger.debug("Rejected JWT token issued prior to password change for user id: " + user.getId());
                             filterChain.doFilter(request, response);
                             return;
                         }

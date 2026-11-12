@@ -1,7 +1,9 @@
 package com.travelease.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.travelease.entity.BookingStatus;
 import com.travelease.entity.PaymentStatus;
+import jakarta.validation.constraints.AssertTrue;
 
 public class BookingStatusUpdateRequest {
 
@@ -14,6 +16,12 @@ public class BookingStatusUpdateRequest {
     public BookingStatusUpdateRequest(BookingStatus status, PaymentStatus paymentStatus) {
         this.status = status;
         this.paymentStatus = paymentStatus;
+    }
+
+    @JsonIgnore
+    @AssertTrue(message = "At least one of 'status' or 'paymentStatus' must be provided.")
+    public boolean isAtLeastOneStatusProvided() {
+        return status != null || paymentStatus != null;
     }
 
     public BookingStatus getStatus() {

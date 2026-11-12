@@ -19,6 +19,9 @@ public class ContactInquiry {
     @Column(nullable = false, length = 150)
     private String email;
 
+    @Column(nullable = false, length = 200)
+    private String subject = "General Inquiry";
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
@@ -34,8 +37,13 @@ public class ContactInquiry {
     }
 
     public ContactInquiry(String name, String email, String message) {
+        this(name, email, "General Inquiry", message);
+    }
+
+    public ContactInquiry(String name, String email, String subject, String message) {
         this.name = name;
         this.email = email;
+        this.subject = (subject != null && !subject.isBlank()) ? subject.trim() : "General Inquiry";
         this.message = message;
         this.status = InquiryStatus.NEW;
     }
@@ -62,6 +70,14 @@ public class ContactInquiry {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
     }
 
     public String getMessage() {

@@ -7,11 +7,22 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+    open-in-view: false
     show-sql: false
   flyway:
     enabled: false
+  cache:
+    type: caffeine
 
 travelease:
   jwt:
     secret: mock-jwt-secret-key-for-unit-testing-purposes-only-32-bytes-minimum
     expiration-ms: 3600000
+  admin:
+    bootstrap-username: ""
+    bootstrap-email: ""
+    bootstrap-password: ""
+    reset-password: false
+    force-password-change: false
+  rate-limit:
+    enabled: false

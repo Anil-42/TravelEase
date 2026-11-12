@@ -61,11 +61,11 @@ const HomePage = () => {
       <section className="stats-banner">
         <div className="container stats-grid">
           <div className="stat-item">
-            <h3>4+</h3>
+            <h3>{packages.length > 0 ? `${packages.length}+` : '10+'}</h3>
             <p>Curated Destinations</p>
           </div>
           <div className="stat-item">
-            <h3>₹9,499</h3>
+            <h3>₹8,999</h3>
             <p>Starting Tour Fare</p>
           </div>
           <div className="stat-item">
@@ -96,14 +96,14 @@ const HomePage = () => {
           {!loading && !error && packages.length > 0 && (
             <>
               <div className="packages-grid">
-                {packages.map((pkg) => (
+                {packages.slice(0, 6).map((pkg) => (
                   <PackageCard key={pkg.id} pkg={pkg} />
                 ))}
               </div>
 
               <div style={{ textAlign: 'center', marginTop: '48px' }}>
                 <Link to="/packages" className="btn btn-outline">
-                  Browse All Packages <i className="fa-solid fa-arrow-right"></i>
+                  Browse All {packages.length} Packages <i className="fa-solid fa-arrow-right"></i>
                 </Link>
               </div>
             </>

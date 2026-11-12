@@ -2,6 +2,7 @@ package com.travelease.config;
 
 import com.travelease.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -33,13 +34,20 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final RateLimitingFilter rateLimitingFilter;
+    private final PasswordChangeEnforcementFilter passwordChangeEnforcementFilter;
     private final UserRepository userRepository;
 
     @Value("${travelease.cors.allowed-origins:http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173}")
     private String allowedOrigins;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserRepository userRepository) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
+                          RateLimitingFilter rateLimitingFilter,
+                          PasswordChangeEnforcementFilter passwordChangeEnforcementFilter,
+                          UserRepository userRepository) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.rateLimitingFilter = rateLimitingFilter;
+        this.passwordChangeEnforcementFilter = passwordChangeEnforcementFilter;
         this.userRepository = userRepository;
     }
 
@@ -55,6 +63,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/auth/change-password").authenticated()
 
+                        // Admin Packages Read Endpoint (must precede wildcard GET /api/packages/**)
+                        .requestMatchers(HttpMethod.GET, "/api/packages/admin/**").hasRole("ADMIN")
+
                         // Public Packages Read Endpoints
                         .requestMatchers(HttpMethod.GET, "/api/packages", "/api/packages/**").permitAll()
 
@@ -67,8 +78,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/packages/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/packages/**").hasRole("ADMIN")
 
-                        // Admin Only: View all contact messages
+                        // Admin Only: Contact management
                         .requestMatchers(HttpMethod.GET, "/api/contact").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/contact/**").hasRole("ADMIN")
+
+                        // Admin Dashboard & Management APIs
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // Bookings require authentication (fine-grained control in controller/service)
                         .requestMatchers("/api/bookings/**").authenticated()
@@ -77,9 +92,33 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(passwordChangeEnforcementFilter, JwtAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    // Prevent Spring Boot from double-registering security filters in the root servlet chain
+    @Bean
+    public FilterRegistrationBean<JwtAuthenticationFilter> jwtFilterRegistration(JwtAuthenticationFilter filter) {
+        FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<RateLimitingFilter> rateLimitingFilterRegistration(RateLimitingFilter filter) {
+        FilterRegistrationBean<RateLimitingFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<PasswordChangeEnforcementFilter> passwordChangeFilterRegistration(PasswordChangeEnforcementFilter filter) {
+        FilterRegistrationBean<PasswordChangeEnforcementFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean

@@ -12,6 +12,7 @@ const LoginPage = () => {
     password: '',
   });
 
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -39,18 +40,25 @@ const LoginPage = () => {
     setError('');
 
     try {
-      await login({
+      const authUser = await login({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
       });
 
-      // Redirect user to their intended destination
-      navigate(returnTo, { replace: true });
+      if (authUser.mustChangePassword) {
+        navigate('/force-password-change', { replace: true });
+      } else if (authUser.role === 'ROLE_ADMIN' && returnTo === '/') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate(returnTo, { replace: true });
+      }
     } catch (err) {
       if (err.response?.status === 401) {
         setError('Invalid email or password. Please verify your credentials.');
       } else if (err.response?.status === 403) {
         setError('Your account is deactivated. Please contact customer support.');
+      } else if (err.response?.status === 429) {
+        setError('Too many login attempts. Please wait a minute and try again.');
       } else if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else {
@@ -109,16 +117,36 @@ const LoginPage = () => {
                 Forgot password?
               </Link>
             </div>
-            <input
-              type="password"
-              name="password"
-              className="form-control"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={handleChange}
-              disabled={loading}
-              required
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                className="form-control"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+                disabled={loading}
+                required
+                style={{ paddingRight: '42px' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                }}
+              >
+                <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+              </button>
+            </div>
           </div>
 
           <button

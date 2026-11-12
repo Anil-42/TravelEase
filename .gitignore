@@ -6,10 +6,15 @@
 # ------------------------------------------------------------------------------
 # 1. Environment & Secret Exclusions (CRITICAL)
 # ------------------------------------------------------------------------------
+.env
+**/.env
 *.env
 *.env.*
 !.env.example
 !*.env.example
+!**/.env.example
+
+# Local Secrets, Keys & Overrides
 *.pem
 *.key
 *.pkcs12
@@ -17,6 +22,16 @@
 *.p12
 *.jks
 *.keystore
+*.crt
+*.der
+*.secret
+*credentials*.json
+**/application-local*.yml
+**/application-local*.yaml
+**/application-local*.properties
+**/application-secret*.yml
+**/application-secret*.yaml
+**/application-secret*.properties
 
 # ------------------------------------------------------------------------------
 # 2. Spring Boot Backend Exclusions
@@ -31,6 +46,11 @@ target/
 *.zip
 *.tar.gz
 *.rar
+.flattened-pom.xml
+dependency-reduced-pom.xml
+hs_err_pid*
+replay_pid*
+*.hprof
 
 # Maven Wrapper & Build Rules (Explicitly Tracked)
 !**/mvnw
@@ -41,7 +61,9 @@ target/
 
 # Local Spring / Maven Cache
 .mvn/timing.properties
+**/.mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar.part
+**/.mvn/wrapper/maven-wrapper.jar.part
 
 # ------------------------------------------------------------------------------
 # 3. React / Vite Frontend Exclusions
@@ -51,6 +73,12 @@ node_modules/
 **/dist/
 dist/
 dist-ssr/
+**/.vite/
+.vite/
+**/.vite-temp/
+**/coverage/
+coverage/
+*.tsbuildinfo
 *.local
 
 # Frontend Package Rules (Explicitly Tracked)
@@ -78,6 +106,7 @@ lerna-debug.log*
 local_backup/
 *.db
 *.sqlite
+*.sqlite3
 
 # Keep Authoritative Migrations & Reference Schema
 !**/src/main/resources/db/migration/*.sql
@@ -91,21 +120,20 @@ local_backup/
 *.iml
 *.iws
 *.ipr
-out/
-!**/src/main/**
+/out/
+backend/out/
 
 # Eclipse
 .project
 .classpath
 .settings/
-bin/
+/bin/
+backend/bin/
 
-# Visual Studio Code
+# Visual Studio Code (ignore local settings/launch files that may hold env secrets)
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
 !.vscode/extensions.json
+!.vscode/tasks.json
 
 # Miscellaneous Editors
 *.sublime-project

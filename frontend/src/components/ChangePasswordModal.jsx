@@ -1,27 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../api/authApi';
 import { useAuth } from '../context/AuthContext';
+import PasswordStrengthInput from './PasswordStrengthInput';
+import { evaluatePasswordStrength, getFirstPasswordError } from '../utils/passwordPolicy';
 
-const ChangePasswordModal = ({ isOpen, onClose }) => {
+const INITIAL_FORM = {
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+};
+
+const ChangePasswordModalContent = ({ onClose }) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM);
 
   const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const redirectTimerRef = useRef(null);
 
-  if (!isOpen) return null;
+  const clearPendingTimer = () => {
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => clearPendingTimer();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,8 +50,9 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       return;
     }
 
-    if (!formData.newPassword || formData.newPassword.length < 6) {
-      setError('New password must be at least 6 characters.');
+    const strength = evaluatePasswordStrength(formData.newPassword);
+    if (!strength.isValid) {
+      setError(getFirstPasswordError(formData.newPassword));
       return;
     }
 
@@ -64,7 +76,8 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       });
 
       setSuccess(res.message || 'Password updated successfully! Revoking session...');
-      setTimeout(() => {
+      clearPendingTimer();
+      redirectTimerRef.current = setTimeout(() => {
         logout();
         onClose();
         navigate('/login?reason=password_changed');
@@ -78,7 +91,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px', maxHeight: '92vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div
@@ -86,7 +99,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                 width: '36px',
                 height: '36px',
                 borderRadius: '8px',
-                background: 'rgba(13, 148, 136, 0.15)',
+                background: 'var(--primary-light)',
                 color: 'var(--primary)',
                 display: 'flex',
                 alignItems: 'center',
@@ -128,12 +141,13 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
               <input
                 type={showCurrent ? 'text' : 'password'}
                 name="currentPassword"
-                className="form-input"
+                className="form-control"
                 value={formData.currentPassword}
                 onChange={handleChange}
                 placeholder="Enter current password"
                 disabled={loading || Boolean(success)}
                 required
+                style={{ paddingRight: '42px' }}
               />
               <button
                 type="button"
@@ -154,71 +168,17 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          <div className="form-group" style={{ marginBottom: '14px' }}>
-            <label className="form-label">New Password (min 6 characters)</label>
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showNew ? 'text' : 'password'}
-                name="newPassword"
-                className="form-input"
-                value={formData.newPassword}
-                onChange={handleChange}
-                placeholder="Enter new password"
-                disabled={loading || Boolean(success)}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowNew(!showNew)}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                }}
-              >
-                <i className={`fa-solid ${showNew ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-              </button>
-            </div>
-          </div>
+          <PasswordStrengthInput
+            label="New Password"
+            name="newPassword"
+            value={formData.newPassword}
+            onChange={handleChange}
+            confirmValue={formData.confirmPassword}
+            onConfirmChange={handleChange}
+            disabled={loading || Boolean(success)}
+          />
 
-          <div className="form-group" style={{ marginBottom: '20px' }}>
-            <label className="form-label">Confirm New Password</label>
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showConfirm ? 'text' : 'password'}
-                name="confirmPassword"
-                className="form-input"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Re-type new password"
-                disabled={loading || Boolean(success)}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirm(!showConfirm)}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                }}
-              >
-                <i className={`fa-solid ${showConfirm ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-              </button>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '10px' }}>
             <button
               type="button"
               className="btn btn-outline btn-sm"
@@ -245,6 +205,11 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       </div>
     </div>
   );
+};
+
+const ChangePasswordModal = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+  return <ChangePasswordModalContent onClose={onClose} />;
 };
 
 export default ChangePasswordModal;

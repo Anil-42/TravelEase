@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }) => {
               username: profile.username,
               email: profile.email,
               role: profile.role,
+              mustChangePassword: Boolean(profile.mustChangePassword),
             };
             setUser(refreshedUser);
             localStorage.setItem('travelease_user', JSON.stringify(refreshedUser));
@@ -59,6 +60,7 @@ export const AuthProvider = ({ children }) => {
       username: data.username,
       email: data.email,
       role: data.role,
+      mustChangePassword: Boolean(data.mustChangePassword),
     };
     setToken(data.token);
     setUser(authUser);
@@ -76,6 +78,7 @@ export const AuthProvider = ({ children }) => {
     token,
     isAuthenticated: Boolean(token),
     isAdmin: user?.role === 'ROLE_ADMIN',
+    mustChangePassword: Boolean(user?.mustChangePassword),
     loading,
     login,
     register,

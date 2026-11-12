@@ -9,6 +9,7 @@ public class PackageResponse {
     private Long id;
     private String slug;
     private String title;
+    private String destination;
     private String description;
     private BigDecimal basePrice;
     private String duration;
@@ -45,6 +46,14 @@ public class PackageResponse {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
+    public void setDestination(String destination) {
+        this.destination = destination;
     }
 
     public String getDescription() {

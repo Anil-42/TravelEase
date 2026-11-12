@@ -11,6 +11,9 @@ public class PackageUpdateRequest {
     @Size(max = 200)
     private String title;
 
+    @Size(max = 120)
+    private String destination;
+
     private String description;
 
     @DecimalMin(value = "0.0", inclusive = true, message = "Base price cannot be negative")
@@ -36,6 +39,14 @@ public class PackageUpdateRequest {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
+    public void setDestination(String destination) {
+        this.destination = destination;
     }
 
     public String getDescription() {

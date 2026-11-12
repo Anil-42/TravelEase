@@ -21,6 +21,9 @@ public class Package {
     @Column(nullable = false, length = 200)
     private String title;
 
+    @Column(length = 120)
+    private String destination;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
@@ -92,6 +95,14 @@ public class Package {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
+    public void setDestination(String destination) {
+        this.destination = destination;
     }
 
     public String getDescription() {

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import PasswordStrengthInput from '../components/PasswordStrengthInput';
+import { evaluatePasswordStrength, getFirstPasswordError } from '../utils/passwordPolicy';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -10,6 +12,7 @@ const RegisterPage = () => {
     username: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -25,8 +28,12 @@ const RegisterPage = () => {
     if (!formData.email.trim() || !emailRegex.test(formData.email.trim())) {
       newErrors.email = 'Please provide a valid email address.';
     }
-    if (!formData.password || formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters.';
+    const pwStrength = evaluatePasswordStrength(formData.password);
+    if (!pwStrength.isValid) {
+      newErrors.password = getFirstPasswordError(formData.password);
+    }
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match.';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -54,6 +61,7 @@ const RegisterPage = () => {
         username: formData.username.trim(),
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
+        confirmPassword: formData.confirmPassword,
       });
 
       // On successful registration, guide user to login
@@ -77,7 +85,7 @@ const RegisterPage = () => {
 
   return (
     <div className="container section" style={{ minHeight: '75vh', display: 'flex', alignItems: 'center' }}>
-      <div className="form-card" style={{ width: '100%' }}>
+      <div className="form-card" style={{ width: '100%', maxWidth: '500px' }}>
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <h2 style={{ fontSize: '2rem', color: '#fff', marginBottom: '8px' }}>
             Create Your <span>Account</span>
@@ -127,21 +135,17 @@ const RegisterPage = () => {
             {errors.email && <p className="form-error">{errors.email}</p>}
           </div>
 
-          <div className="form-group">
-            <label className="form-label">
-              Password (min. 6 characters) <span>*</span>
-            </label>
-            <input
-              type="password"
-              name="password"
-              className="form-control"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={handleChange}
-              disabled={submitting}
-            />
-            {errors.password && <p className="form-error">{errors.password}</p>}
-          </div>
+          <PasswordStrengthInput
+            label="Password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            confirmValue={formData.confirmPassword}
+            onConfirmChange={handleChange}
+            disabled={submitting}
+            error={errors.password}
+            confirmError={errors.confirmPassword}
+          />
 
           <button
             type="submit"

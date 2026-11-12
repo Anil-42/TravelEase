@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from './LoadingSpinner';
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, mustChangePassword, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -13,6 +13,10 @@ const ProtectedRoute = ({ children }) => {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (mustChangePassword && location.pathname !== '/force-password-change') {
+    return <Navigate to="/force-password-change" replace />;
   }
 
   return children;

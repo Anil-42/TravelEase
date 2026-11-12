@@ -34,6 +34,9 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private boolean active = true;
 
+    @Column(name = "must_change_password", nullable = false)
+    private boolean mustChangePassword = false;
+
     @Column(name = "password_changed_at")
     private LocalDateTime passwordChangedAt;
 
@@ -94,6 +97,14 @@ public class User implements UserDetails {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    public void setMustChangePassword(boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
     }
 
     public LocalDateTime getCreatedAt() {

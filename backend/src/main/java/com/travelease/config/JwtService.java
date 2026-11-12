@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,21 @@ public class JwtService {
 
     public void setJwtExpiration(long jwtExpiration) {
         this.jwtExpiration = jwtExpiration;
+    }
+
+    @PostConstruct
+    public void validateConfiguration() {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException(
+                    "JWT signing secret is not configured. Please set the JWT_SECRET environment variable (minimum 32 bytes)."
+            );
+        }
+        byte[] keyBytes = decodeSecretBytes(secretKey);
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException(
+                    "JWT_SECRET is too short (" + keyBytes.length + " bytes). Provide a cryptographically random secret of at least 32 bytes (256 bits)."
+            );
+        }
     }
 
     public String generateToken(User user) {
@@ -102,17 +118,22 @@ public class JwtService {
         if (secretKey == null || secretKey.isBlank()) {
             throw new IllegalStateException("JWT signing secret is not configured. Please set the JWT_SECRET environment variable.");
         }
-        byte[] keyBytes;
-        try {
-            keyBytes = Decoders.BASE64.decode(secretKey);
-        } catch (Exception e) {
-            keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
-        }
+        byte[] keyBytes = decodeSecretBytes(secretKey);
         if (keyBytes.length < 32) {
-            byte[] padded = new byte[32];
-            System.arraycopy(keyBytes, 0, padded, 0, Math.min(keyBytes.length, 32));
-            keyBytes = padded;
+            throw new IllegalStateException("JWT signing secret must be at least 32 bytes (256 bits).");
         }
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    private byte[] decodeSecretBytes(String secret) {
+        try {
+            byte[] decoded = Decoders.BASE64.decode(secret.trim());
+            if (decoded.length >= 32) {
+                return decoded;
+            }
+        } catch (Exception ignored) {
+            // Treat as raw UTF-8 secret when not valid Base64
+        }
+        return secret.getBytes(StandardCharsets.UTF_8);
     }
 }

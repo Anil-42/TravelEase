@@ -49,6 +49,7 @@ public class AuthController {
                 currentUser.getEmail(),
                 currentUser.getRole().name(),
                 currentUser.isActive(),
+                currentUser.isMustChangePassword(),
                 currentUser.getCreatedAt()
         );
         return ResponseEntity.ok(response);

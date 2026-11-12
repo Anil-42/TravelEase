@@ -18,6 +18,9 @@ public class PackageCreateRequest {
     @Size(max = 200)
     private String title;
 
+    @Size(max = 120)
+    private String destination;
+
     private String description;
 
     @NotNull(message = "Base price is required")
@@ -53,6 +56,14 @@ public class PackageCreateRequest {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
+    public void setDestination(String destination) {
+        this.destination = destination;
     }
 
     public String getDescription() {

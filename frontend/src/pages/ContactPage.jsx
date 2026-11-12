@@ -5,6 +5,7 @@ const ContactPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    subject: '',
     message: '',
   });
 
@@ -32,11 +33,12 @@ const ContactPage = () => {
       const response = await contactApi.submitInquiry({
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
+        subject: formData.subject.trim() || 'General Inquiry',
         message: formData.message.trim(),
       });
 
       setSuccessResponse(response);
-      setFormData({ name: '', email: '', message: '' });
+      setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (err) {
       if (err.response?.data?.message) {
         setErrorMessage(err.response.data.message);
@@ -153,7 +155,7 @@ const ContactPage = () => {
                 <div>
                   <h4 style={{ color: '#fff', marginBottom: '4px' }}>Phone Concierge</h4>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem' }}>
-                    +91 98765 43210 (Mon-Sat, 9 AM - 8 PM IST)
+                    98xxx xxx09 (Mon-Sat, 9 AM - 8 PM IST)
                   </p>
                 </div>
               </div>
@@ -213,6 +215,20 @@ const ContactPage = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
+                  disabled={submitting}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Subject</label>
+                <input
+                  type="text"
+                  name="subject"
+                  className="form-control"
+                  placeholder="e.g. Custom Honeymoon Package, Group Booking"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  maxLength={200}
                   disabled={submitting}
                 />
               </div>

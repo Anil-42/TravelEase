@@ -14,6 +14,9 @@ public class ContactInquiryRequest {
     @Email(message = "Valid email address is required")
     private String email;
 
+    @Size(max = 200, message = "Subject must not exceed 200 characters")
+    private String subject;
+
     @NotBlank(message = "Message is required")
     @Size(min = 5, max = 2000, message = "Message must be between 5 and 2000 characters")
     private String message;
@@ -41,6 +44,14 @@ public class ContactInquiryRequest {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
     }
 
     public String getMessage() {

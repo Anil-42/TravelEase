@@ -8,7 +8,6 @@ const PackageCard = ({ pkg }) => {
       : `/assets/images/${pkg.coverImage}`
     : '/assets/images/tour1.jpg';
 
-  // Format monetary value into Indian Rupee formatting
   const formattedPrice = new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
@@ -21,6 +20,8 @@ const PackageCard = ({ pkg }) => {
         <img
           src={imageUrl}
           alt={pkg.title}
+          loading="lazy"
+          decoding="async"
           onError={(e) => {
             e.target.onerror = null;
             e.target.src = '/assets/images/tour1.jpg';
@@ -29,6 +30,11 @@ const PackageCard = ({ pkg }) => {
         <div className="package-card-badge">
           <i className="fa-regular fa-clock"></i> {pkg.duration}
         </div>
+        {pkg.destination && (
+          <div className="package-card-location">
+            <i className="fa-solid fa-location-dot"></i> {pkg.destination}
+          </div>
+        )}
       </div>
 
       <div className="package-card-body">

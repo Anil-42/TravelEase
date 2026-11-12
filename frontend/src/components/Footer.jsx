@@ -69,7 +69,7 @@ const Footer = () => {
             </li>
             <li style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <i className="fa-solid fa-phone" style={{ color: 'var(--primary)' }}></i>
-              <span>+91 98765 43210</span>
+              <span>98xxx xxx09</span>
             </li>
           </ul>
         </div>

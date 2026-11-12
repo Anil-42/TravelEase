@@ -1,52 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { packageApi } from '../api/packageApi';
 import PackageCard from '../components/PackageCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 
 const PackagesPage = () => {
-  const [packages, setPackages] = useState([]);
+  const [pagedData, setPagedData] = useState({ content: [], page: 0, totalPages: 0, totalElements: 0, first: true, last: true });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState('default');
+  const [page, setPage] = useState(0);
 
-  const fetchPackages = async () => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setPage(0);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const fetchPackages = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await packageApi.getAllPackages();
-      setPackages(data);
+      const params = {
+        search: debouncedSearch,
+        page,
+        size: 9,
+        sortBy: sortBy === 'default' ? 'id' : 'basePrice',
+        direction: sortBy === 'price-high' ? 'desc' : 'asc',
+      };
+      const data = await packageApi.getPagedPackages(params);
+      setPagedData(data);
     } catch {
       setError('Failed to load packages from server. Please verify backend connection.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedSearch, page, sortBy]);
 
   useEffect(() => {
     fetchPackages();
-  }, []);
-
-  // Filter and sort packages
-  const filteredPackages = packages
-    .filter((pkg) => {
-      const term = searchTerm.toLowerCase();
-      return (
-        pkg.title.toLowerCase().includes(term) ||
-        pkg.description.toLowerCase().includes(term) ||
-        pkg.duration.toLowerCase().includes(term)
-      );
-    })
-    .sort((a, b) => {
-      if (sortBy === 'price-low') {
-        return a.basePrice - b.basePrice;
-      }
-      if (sortBy === 'price-high') {
-        return b.basePrice - a.basePrice;
-      }
-      return 0;
-    });
+  }, [fetchPackages]);
 
   return (
     <div className="packages-page">
@@ -64,7 +61,7 @@ const PackagesPage = () => {
             Explore <span>Tour Packages</span>
           </h1>
           <p className="section-subtitle" style={{ marginBottom: 0 }}>
-            Choose from our collection of handpicked getaways across India.
+            Choose from our collection of {pagedData.totalElements || 10} handpicked getaways across India.
           </p>
         </div>
       </div>
@@ -89,7 +86,7 @@ const PackagesPage = () => {
             <input
               type="text"
               className="form-control"
-              placeholder="Search by destination or package name..."
+              placeholder="Search by destination, title, or experience..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{ paddingLeft: '40px' }}
@@ -111,7 +108,10 @@ const PackagesPage = () => {
             <select
               className="form-control"
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => {
+                setSortBy(e.target.value);
+                setPage(0);
+              }}
               style={{ width: 'auto' }}
             >
               <option value="default">Featured</option>
@@ -126,7 +126,7 @@ const PackagesPage = () => {
 
         {error && <ErrorMessage message={error} onRetry={fetchPackages} />}
 
-        {!loading && !error && filteredPackages.length === 0 && (
+        {!loading && !error && pagedData.content.length === 0 && (
           <div className="empty-state">
             <i className="fa-solid fa-plane-slash"></i>
             <h3>No packages found</h3>
@@ -137,12 +137,36 @@ const PackagesPage = () => {
           </div>
         )}
 
-        {!loading && !error && filteredPackages.length > 0 && (
-          <div className="packages-grid">
-            {filteredPackages.map((pkg) => (
-              <PackageCard key={pkg.id} pkg={pkg} />
-            ))}
-          </div>
+        {!loading && !error && pagedData.content.length > 0 && (
+          <>
+            <div className="packages-grid">
+              {pagedData.content.map((pkg) => (
+                <PackageCard key={pkg.id} pkg={pkg} />
+              ))}
+            </div>
+
+            {pagedData.totalPages > 1 && (
+              <div className="admin-pagination" style={{ marginTop: '40px' }}>
+                <button
+                  className="btn btn-outline btn-sm"
+                  disabled={pagedData.first}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                >
+                  <i className="fa-solid fa-chevron-left"></i> Previous
+                </button>
+                <span>
+                  Page {pagedData.page + 1} of {pagedData.totalPages} ({pagedData.totalElements} packages)
+                </span>
+                <button
+                  className="btn btn-outline btn-sm"
+                  disabled={pagedData.last}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Next <i className="fa-solid fa-chevron-right"></i>
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

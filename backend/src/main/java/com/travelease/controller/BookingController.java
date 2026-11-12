@@ -66,7 +66,7 @@ public class BookingController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookingResponse> updateBookingStatus(
             @PathVariable Long id,
-            @RequestBody BookingStatusUpdateRequest request
+            @Valid @RequestBody BookingStatusUpdateRequest request
     ) {
         return ResponseEntity.ok(bookingService.updateBookingStatus(id, request));
     }

@@ -3,13 +3,18 @@ package com.travelease.controller;
 import com.travelease.dto.request.PackageCreateRequest;
 import com.travelease.dto.request.PackageUpdateRequest;
 import com.travelease.dto.response.PackageResponse;
+import com.travelease.dto.response.PagedResponse;
 import com.travelease.service.PackageService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -25,6 +30,23 @@ public class PackageController {
     @GetMapping
     public ResponseEntity<List<PackageResponse>> getAllAvailablePackages() {
         return ResponseEntity.ok(packageService.getAllAvailablePackages());
+    }
+
+    @GetMapping("/paged")
+    public ResponseEntity<PagedResponse<PackageResponse>> searchPackagesPaged(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        String safeSort = ("basePrice".equals(sortBy) || "title".equals(sortBy) || "createdAt".equals(sortBy)) ? sortBy : "id";
+        Sort.Direction dir = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        int safeSize = Math.min(Math.max(size, 1), 50);
+        Pageable pageable = PageRequest.of(Math.max(page, 0), safeSize, Sort.by(dir, safeSort));
+        return ResponseEntity.ok(packageService.searchAvailablePackages(search, destination, maxPrice, pageable));
     }
 
     @GetMapping("/admin/all")

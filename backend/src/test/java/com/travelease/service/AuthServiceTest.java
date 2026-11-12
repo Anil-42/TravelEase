@@ -32,6 +32,9 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
+    private static final String STRONG_PASS = "Horizon#Trip2026!";
+    private static final String NEW_STRONG_PASS = "Summit#Valley2027!";
+
     @Mock
     private UserRepository userRepository;
 
@@ -61,9 +64,9 @@ class AuthServiceTest {
 
     @Test
     void register_Success() {
-        RegisterRequest req = new RegisterRequest("newuser", "new@example.com", "secret123");
+        RegisterRequest req = new RegisterRequest("newuser", "new@example.com", STRONG_PASS, STRONG_PASS);
         when(userRepository.existsByEmail("new@example.com")).thenReturn(false);
-        when(passwordEncoder.encode("secret123")).thenReturn("hashedSecret");
+        when(passwordEncoder.encode(STRONG_PASS)).thenReturn("hashedSecret");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User u = invocation.getArgument(0);
             u.setId(20L);
@@ -76,12 +79,27 @@ class AuthServiceTest {
         assertNotNull(resp.getToken());
         assertEquals("new@example.com", resp.getEmail());
         assertEquals(Role.ROLE_USER.name(), resp.getRole());
+        assertFalse(resp.isMustChangePassword());
         verify(userRepository).save(any(User.class));
     }
 
     @Test
+    void register_WeakPassword_ThrowsBadRequest() {
+        RegisterRequest req = new RegisterRequest("newuser", "new@example.com", "weak123", "weak123");
+        assertThrows(BadRequestException.class, () -> authService.register(req));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void register_MismatchedConfirm_ThrowsBadRequest() {
+        RegisterRequest req = new RegisterRequest("newuser", "new@example.com", STRONG_PASS, NEW_STRONG_PASS);
+        assertThrows(BadRequestException.class, () -> authService.register(req));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
     void register_DuplicateEmail_ThrowsBadRequest() {
-        RegisterRequest req = new RegisterRequest("existing", "anil@example.com", "secret123");
+        RegisterRequest req = new RegisterRequest("existing", "anil@example.com", STRONG_PASS, STRONG_PASS);
         when(userRepository.existsByEmail("anil@example.com")).thenReturn(true);
 
         assertThrows(BadRequestException.class, () -> authService.register(req));
@@ -121,30 +139,39 @@ class AuthServiceTest {
     }
 
     @Test
-    void changePassword_Success() {
-        ChangePasswordRequest req = new ChangePasswordRequest("oldPass", "newSecret123", "newSecret123");
+    void changePassword_Success_ClearsMustChangePassword() {
+        activeUser.setMustChangePassword(true);
+        ChangePasswordRequest req = new ChangePasswordRequest("oldPass", NEW_STRONG_PASS, NEW_STRONG_PASS);
         when(passwordEncoder.matches("oldPass", "encodedPassword")).thenReturn(true);
-        when(passwordEncoder.matches("newSecret123", "encodedPassword")).thenReturn(false);
-        when(passwordEncoder.encode("newSecret123")).thenReturn("newEncodedPass");
+        when(passwordEncoder.matches(NEW_STRONG_PASS, "encodedPassword")).thenReturn(false);
+        when(passwordEncoder.encode(NEW_STRONG_PASS)).thenReturn("newEncodedPass");
 
         MessageResponse response = authService.changePassword(req, activeUser);
 
         assertNotNull(response);
         assertEquals("newEncodedPass", activeUser.getPassword());
+        assertFalse(activeUser.isMustChangePassword());
         assertNotNull(activeUser.getPasswordChangedAt());
         verify(userRepository).save(activeUser);
     }
 
     @Test
+    void changePassword_WeakNewPassword_ThrowsBadRequest() {
+        ChangePasswordRequest req = new ChangePasswordRequest("oldPass", "short", "short");
+        assertThrows(BadRequestException.class, () -> authService.changePassword(req, activeUser));
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
     void changePassword_MismatchedConfirm_ThrowsBadRequest() {
-        ChangePasswordRequest req = new ChangePasswordRequest("oldPass", "newSecret123", "different");
+        ChangePasswordRequest req = new ChangePasswordRequest("oldPass", NEW_STRONG_PASS, "different");
         assertThrows(BadRequestException.class, () -> authService.changePassword(req, activeUser));
         verify(userRepository, never()).save(any());
     }
 
     @Test
     void changePassword_IncorrectCurrentPassword_ThrowsBadRequest() {
-        ChangePasswordRequest req = new ChangePasswordRequest("wrongCurrent", "newSecret123", "newSecret123");
+        ChangePasswordRequest req = new ChangePasswordRequest("wrongCurrent", NEW_STRONG_PASS, NEW_STRONG_PASS);
         when(passwordEncoder.matches("wrongCurrent", "encodedPassword")).thenReturn(false);
 
         assertThrows(BadRequestException.class, () -> authService.changePassword(req, activeUser));
@@ -182,10 +209,10 @@ class AuthServiceTest {
         String tokenHash = AuthService.hashToken(rawToken);
         PasswordResetToken tokenEntity = new PasswordResetToken(activeUser, tokenHash, java.time.LocalDateTime.now().plusMinutes(10));
 
-        ResetPasswordRequest req = new ResetPasswordRequest(rawToken, "brandNewSecret", "brandNewSecret");
+        ResetPasswordRequest req = new ResetPasswordRequest(rawToken, NEW_STRONG_PASS, NEW_STRONG_PASS);
         when(passwordResetTokenRepository.findByTokenHashAndUsedFalseAndExpiresAtAfter(eq(tokenHash), any()))
                 .thenReturn(Optional.of(tokenEntity));
-        when(passwordEncoder.encode("brandNewSecret")).thenReturn("encodedBrandNew");
+        when(passwordEncoder.encode(NEW_STRONG_PASS)).thenReturn("encodedBrandNew");
 
         MessageResponse response = authService.resetPassword(req);
 
@@ -199,11 +226,35 @@ class AuthServiceTest {
 
     @Test
     void resetPassword_InvalidOrExpiredToken_ThrowsBadRequest() {
-        ResetPasswordRequest req = new ResetPasswordRequest("expiredOrBad", "brandNewSecret", "brandNewSecret");
+        ResetPasswordRequest req = new ResetPasswordRequest("expiredOrBad", NEW_STRONG_PASS, NEW_STRONG_PASS);
         when(passwordResetTokenRepository.findByTokenHashAndUsedFalseAndExpiresAtAfter(anyString(), any()))
                 .thenReturn(Optional.empty());
 
         assertThrows(BadRequestException.class, () -> authService.resetPassword(req));
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void register_SimplifiedEightCharPassword_Passes() {
+        RegisterRequest req = new RegisterRequest("simpleuser", "simple@example.com", "Travel@12", "Travel@12");
+        when(userRepository.existsByEmail("simple@example.com")).thenReturn(false);
+        when(passwordEncoder.encode("Travel@12")).thenReturn("$2a$10$encodedHash");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> {
+            User u = inv.getArgument(0);
+            u.setId(33L);
+            return u;
+        });
+
+        AuthResponse resp = authService.register(req);
+        assertNotNull(resp);
+        assertEquals("simple@example.com", resp.getEmail());
+    }
+
+    @Test
+    void resetPassword_InvalidNewPassword_ThrowsBadRequestWithoutUsingToken() {
+        ResetPasswordRequest req = new ResetPasswordRequest("rawToken123", "Travelpass", "Travelpass");
+        assertThrows(BadRequestException.class, () -> authService.resetPassword(req));
+        verify(passwordResetTokenRepository, never()).findByTokenHashAndUsedFalseAndExpiresAtAfter(anyString(), any());
         verify(userRepository, never()).save(any());
     }
 }

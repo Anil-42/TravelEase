@@ -8,6 +8,7 @@ public class ContactInquiryResponse {
     private Long id;
     private String name;
     private String email;
+    private String subject;
     private String message;
     private InquiryStatus status;
     private LocalDateTime submittedAt;
@@ -16,9 +17,14 @@ public class ContactInquiryResponse {
     }
 
     public ContactInquiryResponse(Long id, String name, String email, String message, InquiryStatus status, LocalDateTime submittedAt) {
+        this(id, name, email, "General Inquiry", message, status, submittedAt);
+    }
+
+    public ContactInquiryResponse(Long id, String name, String email, String subject, String message, InquiryStatus status, LocalDateTime submittedAt) {
         this.id = id;
         this.name = name;
         this.email = email;
+        this.subject = subject;
         this.message = message;
         this.status = status;
         this.submittedAt = submittedAt;
@@ -46,6 +52,14 @@ public class ContactInquiryResponse {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
     }
 
     public String getMessage() {

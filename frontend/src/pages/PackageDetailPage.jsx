@@ -68,6 +68,11 @@ const PackageDetailPage = () => {
               <i className="fa-solid fa-arrow-left"></i> Back to all packages
             </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+              {pkg.destination && (
+                <span className="badge badge-tag">
+                  <i className="fa-solid fa-location-dot"></i> {pkg.destination}
+                </span>
+              )}
               <span className="badge badge-tag">
                 <i className="fa-regular fa-clock"></i> {pkg.duration}
               </span>

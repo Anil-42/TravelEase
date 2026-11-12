@@ -1,6 +1,7 @@
 package com.travelease.controller;
 
 import com.travelease.dto.request.ContactInquiryRequest;
+import com.travelease.dto.request.InquiryStatusUpdateRequest;
 import com.travelease.dto.response.ContactInquiryResponse;
 import com.travelease.service.ContactService;
 import jakarta.validation.Valid;
@@ -33,5 +34,14 @@ public class ContactController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ContactInquiryResponse>> getAllInquiries() {
         return ResponseEntity.ok(contactService.getAllInquiries());
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ContactInquiryResponse> updateInquiryStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody InquiryStatusUpdateRequest request
+    ) {
+        return ResponseEntity.ok(contactService.updateInquiryStatus(id, request.getStatus()));
     }
 }

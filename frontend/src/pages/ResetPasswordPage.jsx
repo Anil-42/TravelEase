@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { authApi } from '../api/authApi';
+import PasswordStrengthInput from '../components/PasswordStrengthInput';
+import { evaluatePasswordStrength, getFirstPasswordError } from '../utils/passwordPolicy';
 
 const ResetPasswordPage = () => {
   const navigate = useNavigate();
@@ -14,12 +16,18 @@ const ResetPasswordPage = () => {
     confirmPassword: '',
   });
 
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const redirectTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -34,8 +42,9 @@ const ResetPasswordPage = () => {
       return;
     }
 
-    if (!formData.newPassword || formData.newPassword.length < 6) {
-      setError('New password must be at least 6 characters.');
+    const strength = evaluatePasswordStrength(formData.newPassword);
+    if (!strength.isValid) {
+      setError(getFirstPasswordError(formData.newPassword));
       return;
     }
 
@@ -55,7 +64,10 @@ const ResetPasswordPage = () => {
       });
 
       setSuccess(res.message || 'Password reset successfully! Redirecting to sign in...');
-      setTimeout(() => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+      redirectTimerRef.current = setTimeout(() => {
         navigate('/login?reason=password_changed', { replace: true });
       }, 2000);
     } catch (err) {
@@ -70,7 +82,7 @@ const ResetPasswordPage = () => {
 
   return (
     <div className="container section" style={{ minHeight: '75vh', display: 'flex', alignItems: 'center' }}>
-      <div className="form-card" style={{ width: '100%', maxWidth: '440px', margin: '0 auto' }}>
+      <div className="form-card" style={{ width: '100%', maxWidth: '480px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div
             style={{
@@ -125,69 +137,15 @@ const ResetPasswordPage = () => {
             )}
 
             <form onSubmit={handleSubmit}>
-              <div className="form-group" style={{ marginBottom: '16px' }}>
-                <label className="form-label">New Password (min 6 characters)</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type={showNew ? 'text' : 'password'}
-                    name="newPassword"
-                    className="form-control"
-                    placeholder="Enter new password"
-                    value={formData.newPassword}
-                    onChange={handleChange}
-                    disabled={loading || Boolean(success)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNew(!showNew)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'transparent',
-                      border: 'none',
-                      color: 'var(--text-muted)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <i className={`fa-solid ${showNew ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-                  </button>
-                </div>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: '22px' }}>
-                <label className="form-label">Confirm New Password</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type={showConfirm ? 'text' : 'password'}
-                    name="confirmPassword"
-                    className="form-control"
-                    placeholder="Re-type new password"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    disabled={loading || Boolean(success)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm(!showConfirm)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'transparent',
-                      border: 'none',
-                      color: 'var(--text-muted)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <i className={`fa-solid ${showConfirm ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-                  </button>
-                </div>
-              </div>
+              <PasswordStrengthInput
+                label="New Password"
+                name="newPassword"
+                value={formData.newPassword}
+                onChange={handleChange}
+                confirmValue={formData.confirmPassword}
+                onConfirmChange={handleChange}
+                disabled={loading || Boolean(success)}
+              />
 
               <button
                 type="submit"
